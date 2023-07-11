@@ -1,165 +1,103 @@
-import { Button, StyleSheet, Image, View, StatusBar } from 'react-native'
-import React, { useEffect } from 'react'
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { TextInput } from 'react-native-paper';
-import { couples, raindrop } from '../assets/assets';
-import { Flash } from '../native-modules';
+import React, { useEffect, useState } from 'react';
+import { StatusBar, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+
+import Feather from 'react-native-vector-icons/Feather';
 
 
-
+const defaultProps = {
+    cartTextTimeOut: 400,
+    cartValueTimeIn: 400,
+    width: 100,
+}
 const HomeScreen = (props: any) => {
-    
+    const [cartCount, setCartCount] = useState<number>(0)
+    useEffect(() =>{
+        console.log('setCartCount', cartCount)
+    },[cartCount])
+    return (
+        <CartButton textColor='black' style={{backgroundColor:"yellow", borderWidth:1, borderRadius:7}} onChangeHandler={(count)=> setCartCount(count)}/>
+    )
+}
 
-    const offset = useSharedValue(0);
-
-    const disabledRaindrop = useAnimatedStyle(() => {
+const CartButton = (props: { cartTextTimeOut?: number, cartValueTimeIn?: number, style?: StyleProp<ViewStyle>, cartText?: string, textColor?: string, onChangeHandler:(count:number)=>void }) => {
+    const { cartTextTimeOut, cartValueTimeIn, style, cartText, textColor, onChangeHandler } = props;
+    const offset = useSharedValue(1);
+    const moveLeftVal = useSharedValue(1);
+    const moveRightVal = useSharedValue(1);
+    const moveInVal = useSharedValue(0);
+    const [cartCount, setCartCount] = useState<number>(0)
+    const pressBtnStyle = useAnimatedStyle(() => {
         return {
-            transform: [{ rotate: '12deg' }],
-            display: offset.value > 0 ? "flex" : "none",
+            opacity: offset.value,
+            display: offset.value === 0 ? 'none' : "flex",
+            transform: [{
+                scale: offset.value
+            }]
         };
-    });
-    const enabledRaindrop = useAnimatedStyle(() => {
+    })
+    const afterPressStyle = useAnimatedStyle(() => {
         return {
-            transform: [{ translateY: offset.value * 20 }, { rotate: '12deg' }],
-            display: offset.value > 0 ? "none" : "flex"
+            display: offset.value >= 0.1 ? 'none' : "flex",
+            transform: [{ scale: offset.value ? withSpring(0) : withSpring(1) }]
         };
-    });
-
-
-
-    const defaultSpringStyles = useAnimatedStyle(() => {
+    }, [offset]);
+    const movingInStyle = useAnimatedStyle(() => {
         return {
-            transform: [{ translateY: withSpring(offset.value * 255) }, { rotate: '10deg' }],
-            backgroundColor: `rgba(125,181,237,${offset.value > 0 ? 1 : 0})`,
+            transform: [{ scale: moveInVal.value }]
         };
-    });
+    }, [offset]);
+    const movingLeftStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ translateX: moveLeftVal.value }]
+        };
+    }, [offset]);
+    const movingRightStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ translateX: moveRightVal.value }]
+        };
+    }, [offset]);
 
+    const onBtnPressed = () => {
+        setCartCount(1)
+        offset.value = withTiming(0, { duration: cartTextTimeOut ?? 400 }, () => {
+            moveLeftVal.value = withTiming(-20, { duration: cartValueTimeIn ?? 400 })
+            moveRightVal.value = withTiming(20, { duration: cartValueTimeIn ?? 400 })
+            moveInVal.value = 1
+        })
+    }
+    const handleCount = (value: number) => {
+        setCartCount(currentCartCount => currentCartCount + value)
+    }
     useEffect(() => {
-        setInterval(() => {
-            offset.value = withSpring(offset.value === 0 ? 1.7 : 0)
-        }, 200)
-        const successCallBack = () => {
-            console.log("success")
+        if (cartCount === 0) {
+            offset.value = withTiming(1, { duration: cartTextTimeOut ?? 400 })
+            moveLeftVal.value = withTiming(0, { duration: cartValueTimeIn ?? 400 })
+            moveRightVal.value = withTiming(0, { duration: cartValueTimeIn ?? 400 })
+            moveInVal.value = 0
         }
-        const failureCallBack = () => {
-            console.log("Failure")
-        }
-        const allConstants = Flash.hasFlash(successCallBack, failureCallBack);
-       console.log("================================",allConstants, Flash)
-    }, [])
-
-
+        onChangeHandler(cartCount)
+    }, [cartCount])
 
     return (
-        <View style={{ flex: 1 }}>
-            <StatusBar hidden/>
-            {/* {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25].map((_, index) => <>
-                <View style={{ flexDirection: "row" }}>
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 0, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 40, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 50, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 50, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 60, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 70, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 75, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 80, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 85, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 90, height: 30 - _ }, disabledRaindrop]} />
-                </View>
-                <View style={{ flexDirection: "row" }}>
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 0, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 40, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 50, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 50, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 60, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 70, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 75, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 80, height: 30 - _ }, enabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 85, height: 30 - _ }, disabledRaindrop]} />
-                    <Animated.Image source={raindrop} style={[styles.commonBox, { marginLeft: 90, height: 30 - _ }, enabledRaindrop]} />
-                </View>
-            </>)}
-            <Image style={{ position: "absolute", height: '80%', width: '80%', resizeMode: "contain", bottom: -50, left: 80 }} source={couples} /> */}
+        <View style={[{ width: 100, height: 40, backgroundColor: "green", justifyContent: "center", alignItems: "center" }, style]}>
+            <Animated.View style={[pressBtnStyle]}>
+                <TouchableOpacity onPressIn={onBtnPressed}><Text style={{ color: textColor ?? "white", padding: 10 }}>{`Add to cart` ?? cartText}</Text></TouchableOpacity>
+            </Animated.View>
+            <Animated.View style={[afterPressStyle, { flexDirection: "row", justifyContent: "center", alignItems: "center" }]}>
+                <Animated.View style={[movingLeftStyle]}>
+                    <Feather color={textColor ?? "white"} onPress={() => handleCount(1)} name='plus' />
+                </Animated.View>
+                <Animated.View style={[movingInStyle]}>
+                    <Text style={{ color: textColor ?? "white" }}>{cartCount}</Text>
+                </Animated.View>
+                <Animated.View style={[movingRightStyle]}>
+                    <Feather color={textColor ?? "white"} onPress={() => handleCount(-1)} name='minus' />
+                </Animated.View>
+            </Animated.View>
         </View>
     )
 }
 
 
 export default HomeScreen
-
-const styles = StyleSheet.create({
-    commonBox: {
-        width: 30,
-        height: 30,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderBottomEndRadius: 90,
-        borderBottomStartRadius: 90,
-        resizeMode: "contain"
-    },
-    commonBox1: {
-        width: 20,
-        height: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderBottomEndRadius: 90,
-        borderBottomStartRadius: 90,
-        resizeMode: "contain"
-    },
-    blueBox: {
-        width: 30,
-        height: 30,
-        // borderWidth:1,
-        // backgroundColor: 'rgba(0,0,0,1)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    greenBox: {
-        width: 30,
-        height: 30,
-        // borderWidth:1,
-        // backgroundColor: 'green',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    orangeBox: {
-        width: 30,
-        height: 30,
-        // borderWidth:1,
-        // backgroundColor: 'orange',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    redBox: {
-        width: 30,
-        height: 30,
-        // borderWidth:1,
-        // backgroundColor: 'red',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    violetBox: {
-        width: 30,
-        height: 30,
-        // borderWidth:1,
-        // backgroundColor: 'violet',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    pinkBox: {
-        width: 30,
-        height: 30,
-        // borderWidth:1,
-        // backgroundColor: 'pink',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    indigoBox: {
-        width: 30,
-        height: 30,
-        // borderWidth:1,
-        // backgroundColor: 'indigo',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-})
