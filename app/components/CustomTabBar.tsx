@@ -11,15 +11,19 @@ import Animated, {
   withRepeat,
   withTiming,
   withSequence,
+  withSpring,
 } from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
 
 const CustomTabBar = (props: BottomTabBarProps) => {
-  const rotation = useSharedValue(0);
+  const rotation = useSharedValue(1);
   const width = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ rotateZ: `${rotation.value}deg` }],
+      transform:[{
+        scale: rotation.value
+      }]
     };
   });
   const animatedBorderStyle = useAnimatedStyle(() => {
@@ -30,26 +34,29 @@ const CustomTabBar = (props: BottomTabBarProps) => {
 
 
   const handleNavigations = (routeName: string) => {
-    rotation.value = withRepeat(withTiming(20), 2, true)
+    rotation.value = withRepeat(withSpring(0.5), 2, true)
     width.value = withRepeat(withTiming(30), 2, true)
     props.navigation.navigate(routeName)
   }
   return (
-    <View style={{ flexDirection: "row", justifyContent: "space-around", paddingVertical: 20 }}>
+    <LinearGradient colors={["#1D103A", "#351676"]}
+      start={{ x: 0, y: 1 }}
+      end={{ x: 0, y: 0 }}
+      style={{ flexDirection: "row", justifyContent: "space-around", paddingVertical: 20 }}>
       {props.state.routeNames.map((name: string, index: number) => {
         return (
           <Fragment key={index}>
             <TouchableOpacity key={index.toString()} onPress={() => handleNavigations(name)} style={{ flexDirection: "column", alignItems: "center" }}>
               <Animated.View style={[{}, props.state.index === index && animatedStyle]} >
-                <Feather style={{ color: props.state.index === index ? "black" : "grey", fontSize: 30 }} name={name.toLowerCase()} />
+                <Feather style={{ color: props.state.index === index ? "#844DFB":"#AFA8BE", fontSize: 30 }} name={name.toLowerCase()} />
               </Animated.View>
-              <Text>{name}</Text>
-              <Animated.View style={[{ height: 2, backgroundColor: "black", },  props.state.index === index && animatedBorderStyle]} />
+              <Text style={{ color: props.state.index === index ? "#844DFB":"#AFA8BE",textTransform: "capitalize" }}>{name}</Text>
+              <Animated.View style={[{ height: 2, backgroundColor: "black", }, props.state.index === index && animatedBorderStyle]} />
             </TouchableOpacity>
           </Fragment>
         )
       })}
-    </View>
+    </LinearGradient>
   )
 }
 

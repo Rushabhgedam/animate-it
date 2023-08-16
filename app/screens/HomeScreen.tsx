@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { Image, StatusBar, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import Animated, { SharedValue, runOnJS, useAnimatedStyle, useDerivedValue, useSharedValue, useWorkletCallback, withDecay, withSpring, withTiming } from 'react-native-reanimated';
 
 import Feather from 'react-native-vector-icons/Feather';
+import CartButton from '../components/CartButton';
+import { home_icon, main_img, ribbon, second_image } from '../assets/assets';
+import FadingInHOC from '../components/FadingInHOC';
+import LinearGradient from 'react-native-linear-gradient';
+import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 
 
 const defaultProps = {
@@ -11,93 +16,63 @@ const defaultProps = {
     width: 100,
 }
 const HomeScreen = (props: any) => {
-    const [cartCount, setCartCount] = useState<number>(0)
-    useEffect(() =>{
-        console.log('setCartCount', cartCount)
-    },[cartCount])
-    return (
-        <CartButton textColor='black' style={{backgroundColor:"yellow", borderWidth:1, borderRadius:7}} onChangeHandler={(count)=> setCartCount(count)}/>
-    )
-}
+    const verticalFadeArr: SharedValue<number>[] = [useSharedValue(0),useSharedValue(0),useSharedValue(0), ]
+    const verticalFade = useSharedValue(0)
 
-const CartButton = (props: { cartTextTimeOut?: number, cartValueTimeIn?: number, style?: StyleProp<ViewStyle>, cartText?: string, textColor?: string, onChangeHandler:(count:number)=>void }) => {
-    const { cartTextTimeOut, cartValueTimeIn, style, cartText, textColor, onChangeHandler } = props;
-    const offset = useSharedValue(1);
-    const moveLeftVal = useSharedValue(1);
-    const moveRightVal = useSharedValue(1);
-    const moveInVal = useSharedValue(0);
-    const [cartCount, setCartCount] = useState<number>(0)
-    const pressBtnStyle = useAnimatedStyle(() => {
-        return {
-            opacity: offset.value,
-            display: offset.value === 0 ? 'none' : "flex",
-            transform: [{
-                scale: offset.value
-            }]
-        };
-    })
-    const afterPressStyle = useAnimatedStyle(() => {
-        return {
-            display: offset.value >= 0.1 ? 'none' : "flex",
-            transform: [{ scale: offset.value ? withSpring(0) : withSpring(1) }]
-        };
-    }, [offset]);
-    const movingInStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ scale: moveInVal.value }]
-        };
-    }, [offset]);
-    const movingLeftStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ translateX: moveLeftVal.value }]
-        };
-    }, [offset]);
-    const movingRightStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ translateX: moveRightVal.value }]
-        };
-    }, [offset]);
+    const verticalFadeStyle1 = useAnimatedStyle(()=> {
+        return{ opacity: verticalFadeArr[0].value}
+     })
 
-    const onBtnPressed = () => {
-        setCartCount(1)
-        offset.value = withTiming(0, { duration: cartTextTimeOut ?? 400 }, () => {
-            moveLeftVal.value = withTiming(-20, { duration: cartValueTimeIn ?? 400 })
-            moveRightVal.value = withTiming(20, { duration: cartValueTimeIn ?? 400 })
-            moveInVal.value = 1
-        })
-    }
-    const handleCount = (value: number) => {
-        setCartCount(currentCartCount => currentCartCount + value)
-    }
-    useEffect(() => {
-        if (cartCount === 0) {
-            offset.value = withTiming(1, { duration: cartTextTimeOut ?? 400 })
-            moveLeftVal.value = withTiming(0, { duration: cartValueTimeIn ?? 400 })
-            moveRightVal.value = withTiming(0, { duration: cartValueTimeIn ?? 400 })
-            moveInVal.value = 0
-        }
-        onChangeHandler(cartCount)
-    }, [cartCount])
+     const verticalFadeStyle2 = useAnimatedStyle(()=> {
+        return{ opacity: verticalFadeArr[1].value}
+     })
+
+     const verticalFadeStyle3 = useAnimatedStyle(()=> {
+        return{ opacity: verticalFadeArr[2].value}
+     })
+   
+    React.useEffect(()=>{
+        setTimeout(() => {
+            verticalFadeArr[0].value = withTiming(1,{duration: 1000},()=>{
+                verticalFadeArr[1].value = withTiming(1,{duration: 1000},()=>{
+                    verticalFadeArr[2].value = withTiming(1,{duration: 1000})
+                })
+            })
+        }, 1000);
+    },[])
 
     return (
-        <View style={[{ width: 100, height: 40, backgroundColor: "green", justifyContent: "center", alignItems: "center" }, style]}>
-            <Animated.View style={[pressBtnStyle]}>
-                <TouchableOpacity onPressIn={onBtnPressed}><Text style={{ color: textColor ?? "white", padding: 10 }}>{`Add to cart` ?? cartText}</Text></TouchableOpacity>
-            </Animated.View>
-            <Animated.View style={[afterPressStyle, { flexDirection: "row", justifyContent: "center", alignItems: "center" }]}>
-                <Animated.View style={[movingLeftStyle]}>
-                    <Feather color={textColor ?? "white"} onPress={() => handleCount(1)} name='plus' />
-                </Animated.View>
-                <Animated.View style={[movingInStyle]}>
-                    <Text style={{ color: textColor ?? "white" }}>{cartCount}</Text>
-                </Animated.View>
-                <Animated.View style={[movingRightStyle]}>
-                    <Feather color={textColor ?? "white"} onPress={() => handleCount(-1)} name='minus' />
-                </Animated.View>
-            </Animated.View>
+        <View style={{ justifyContent: "center", alignItems: "center", }}>
+            <LinearGradient
+                style={{
+                    height: responsiveHeight(100),
+                    width: responsiveWidth(100),
+                }} colors={["#1D103A", "#351676"]}
+                start={{ x: 0, y: 1 }}
+                end={{ x: 0, y: 0 }}>
+                <Animated.Image style={[{
+                    width: responsiveWidth(90),
+                    alignSelf: "center",
+                    marginBottom: responsiveHeight(3),
+                    resizeMode: "contain",
+                    marginTop: responsiveHeight(5)
+                }, verticalFadeStyle1]} source={ribbon} />
+                <Animated.Image style={[{
+                    width: responsiveWidth(90),
+                    alignSelf: "center",
+                    height: responsiveHeight(25),
+                    // marginTop: responsiveHeight(5),
+                    resizeMode: "contain",
+                }, verticalFadeStyle2]} source={main_img} />
+                <Animated.Image style={[{
+                    width: responsiveWidth(90),
+                    alignSelf: "center",
+                    height: responsiveHeight(50),
+                    resizeMode: "contain",
+                }, verticalFadeStyle3]} source={second_image} />
+            </LinearGradient>
         </View>
     )
 }
 
-
-export default HomeScreen
+export default FadingInHOC(HomeScreen, 1000, 0.7)
