@@ -22,7 +22,9 @@ const AppNavigations = () => {
     </Stack.Navigator>
   )
 }
+// @ts-ignore
 console.ignoredYellowBox = true
+// @ts-ignore
 console.disableYellowBox = true
 const App = () => {
   return (

@@ -28,4 +28,4 @@ const MusicScreen = (props: any) => {
 
 
 
-export default (MusicScreen)
+export default FadingInHOC(MusicScreen, 800)
